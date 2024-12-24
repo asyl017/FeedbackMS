@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant List</title>
+</head>
+<body>
+    <h1>Search and Filter Restaurants</h1>
+
+    <div>
+        <label for="type">Restaurant Type:</label>
+        <select id="type">
+            <option value="">All</option>
+            <option value="Italian">Italian</option>
+            <option value="Turkish">Turkish</option>
+        </select>
+
+        <label for="price">Average Bill:</label>
+        <input type="range" id="price" min="0" max="100" step="10" />
+        <span id="price-value">0</span>
+
+        <button onclick="filterRestaurants()">Filter</button>
+    </div>
+
+    <h2>Restaurant List</h2>
+    <div id="restaurant-list">
+        <!-- Restaurant items will be populated dynamically here -->
+    </div>
+
+    <script>
+        document.getElementById('price').addEventListener('input', function() {
+            document.getElementById('price-value').textContent = this.value;
+        });
+
+        function filterRestaurants() {
+            const type = document.getElementById('type').value;
+            const price = document.getElementById('price').value;
+
+            fetch(`/api/restaurants?type=${type}&price=${price}`)
+                .then(response => response.json())
+                .then(data => {
+                    const restaurantList = document.getElementById('restaurant-list');
+                    restaurantList.innerHTML = '';  // Clear current list
+                    data.forEach(restaurant => {
+                        const div = document.createElement('div');
+                        div.innerHTML = `
+                            <strong>${restaurant.name}</strong> <br>
+                            <strong>Type:</strong> ${restaurant.type} <br>
+                            <strong>Average Bill:</strong> $${restaurant.averageBill} <br><br>
+                        `;
+                        restaurantList.appendChild(div);
+                    });
+                });
+        }
+    </script>
+</body>
+</html>

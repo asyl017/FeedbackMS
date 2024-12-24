@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback List</title>
+</head>
+<body>
+    <h1>Feedbacks</h1>
+    <ul id="feedbackList"></ul>
+
+    <script>
+        // Fetch the feedbacks from the server and display them
+        fetch('/api/feedbacks')
+            .then(response => response.json())
+            .then(feedbacks => {
+                const feedbackList = document.getElementById('feedbackList');
+                feedbackList.innerHTML = ''; // Clear any existing feedback
+
+                feedbacks.forEach(feedback => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${feedback.restaurant} - Rating: ${feedback.rating} - ${feedback.comment}`;
+                    feedbackList.appendChild(listItem);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to load feedbacks');
+            });
+    </script>
+</body>
+</html>
