@@ -13,6 +13,18 @@ app.use(express.static('user_interface'));
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/user_interface/submission_page.html'); // Ensure the HTML file exists in the 'user-interface' folder
 });
+// Routes for serving HTML pages
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/user_interface/submission_page.html');
+});
+
+app.get('/feedback-display', (req, res) => {
+    res.sendFile(__dirname + '/user_interface/feedback_display.html');
+});
+
+app.get('/restaurant-list', (req, res) => {
+    res.sendFile(__dirname + '/user_interface/restaurant_list.html');
+});
 
 // Mock data for feedbacks
 let feedbacks = [
@@ -52,6 +64,7 @@ app.post('/api/submit-feedback', (req, res) => {
     // Send a response confirming successful feedback submission
     res.status(200).send('Feedback submitted successfully!');
 });
+
 
 // Start the server on port 3000
 app.listen(port, () => {
