@@ -18,11 +18,11 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/user_interface/submission_page.html');
 });
 
-app.get('/feedback-display', (req, res) => {
+app.get('/feedback_display', (req, res) => {
     res.sendFile(__dirname + '/user_interface/feedback_display.html');
 });
 
-app.get('/restaurant-list', (req, res) => {
+app.get('/restaurant_list', (req, res) => {
     res.sendFile(__dirname + '/user_interface/restaurant_list.html');
 });
 
