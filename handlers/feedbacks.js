@@ -4,9 +4,14 @@ const router = express.Router();
 
 // Endpoint to get all feedbacks sorted by rating (highest to lowest)
 router.get('/api/feedbacks', (req, res) => {
-    // Sort feedbacks by rating in descending order
-    const sortedFeedbacks = feedbacks.sort((a, b) => b.rating - a.rating);
-    res.json(sortedFeedbacks);  // Send sorted feedbacks as JSON
+    const query = 'SELECT * FROM feedbacks ORDER BY rating DESC';
+    fmsdb.query(query, (err, result) => {
+        if (err) {
+            console.error('Error fetching feedbacks:', err);
+            return res.status(500).send('Database error');
+        }
+        res.json(result.rows);
+    });
 });
 
 // Endpoint to handle submitting feedback
@@ -24,16 +29,50 @@ router.post('/api/submit-feedback', (req, res) => {
 
     fmsdb.query(query, values, (err, result) => {
         if (err) {
-            console.error(err);
+            console.error('Error inserting feedback:', err);
             return res.status(500).send('Database error');
         }
-        // Send a response confirming successful feedback submission
         res.status(200).send('Feedback submitted successfully!');
     });
 });
 
+// Endpoint to get feedback by ID
+router.get('/api/feedbacks/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const query = 'SELECT * FROM feedbacks WHERE id = $1';
+    fmsdb.query(query, [id], (err, result) => {
+        if (err) {
+            console.error('Error fetching feedback:', err);
+            return res.status(500).send('Database error');
+        }
+        if (result.rows.length === 0) {
+            return res.status(404).send('Feedback not found');
+        }
+        res.json(result.rows[0]);
+    });
+});
+
+// Endpoint to update feedback by ID
+router.put('/api/feedbacks/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const { restaurant, rating, comment } = req.body;
+    const query = 'UPDATE feedbacks SET restaurant = $1, rating = $2, comment = $3 WHERE id = $4';
+    const values = [restaurant, parseInt(rating), comment, id];
+
+    fmsdb.query(query, values, (err, result) => {
+        if (err) {
+            console.error('Error updating feedback:', err);
+            return res.status(500).send('Database error');
+        }
+        if (result.rowCount === 0) {
+            return res.status(404).send('Feedback not found');
+        }
+        res.status(200).send('Feedback updated successfully!');
+    });
+});
+
 // Endpoint to delete feedback by ID
-router.delete('/delete-feedback/:id', (req, res) => {
+router.delete('/api/feedbacks/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const query = 'DELETE FROM feedbacks WHERE id = $1';
 
@@ -42,34 +81,10 @@ router.delete('/delete-feedback/:id', (req, res) => {
             console.error('Error deleting feedback:', err);
             return res.status(500).send('Database error');
         }
-
         if (result.rowCount === 0) {
             return res.status(404).send('Feedback not found');
         }
-
         res.status(200).send('Feedback deleted successfully!');
-    });
-});
-
-// Endpoint to update feedback by ID
-router.put('/update-feedback/:id', (req, res) => {
-    const feedbackId = parseInt(req.params.id);
-    const { restaurant, rating, comment } = req.body;
-
-    const query = 'UPDATE feedbacks SET restaurant = $1, rating = $2, comment = $3 WHERE id = $4';
-    const values = [restaurant, parseInt(rating), comment, feedbackId];
-
-    fmsdb.query(query, values, (err, result) => {
-        if (err) {
-            console.error('Error updating feedback:', err);
-            return res.status(500).send('Database error');
-        }
-
-        if (result.rowCount === 0) {
-            return res.status(404).send('Feedback not found');
-        }
-
-        res.status(200).send('Feedback updated successfully!');
     });
 });
 

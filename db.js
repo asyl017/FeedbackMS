@@ -9,3 +9,4 @@ const fmsdb = new Pool({
 });
 
 module.exports = fmsdb;
+

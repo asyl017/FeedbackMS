@@ -9,6 +9,40 @@
     <h1>Feedbacks</h1>
     <ul id="feedbackList"></ul>
 
+    <h2>Get Feedback by ID</h2>
+    <form id="feedbackForm">
+        <label for="feedbackId">Feedback ID:</label>
+        <input type="number" id="feedbackId" name="feedbackId" required>
+        <button type="submit">Get Feedback</button>
+    </form>
+    <div id="feedbackResult"></div>
+
+    <h2>Update Feedback by ID</h2>
+    <form id="updateForm">
+        <label for="updateId">Feedback ID:</label>
+        <input type="number" id="updateId" name="updateId" required>
+        <label for="updateRestaurant">Restaurant Name:</label>
+        <input type="text" id="updateRestaurant" name="updateRestaurant" required>
+        <label for="updateRating">Rating (1-5):</label>
+        <select id="updateRating" name="updateRating" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select>
+        <label for="updateComment">Comment:</label>
+        <textarea id="updateComment" name="updateComment" required></textarea>
+        <button type="submit">Update Feedback</button>
+    </form>
+
+    <h2>Delete Feedback by ID</h2>
+    <form id="deleteForm">
+        <label for="deleteId">Feedback ID:</label>
+        <input type="number" id="deleteId" name="deleteId" required>
+        <button type="submit">Delete Feedback</button>
+    </form>
+
     <script>
         // Fetch the feedbacks from the server and display them
         fetch('/api/feedbacks')
@@ -27,6 +61,76 @@
                 console.error('Error:', error);
                 alert('Failed to load feedbacks');
             });
+
+        // Handle getting feedback by ID
+        document.getElementById('feedbackForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const feedbackId = document.getElementById('feedbackId').value;
+
+            fetch(`/api/feedbacks/${feedbackId}`)
+                .then(response => response.json())
+                .then(feedback => {
+                    const feedbackResult = document.getElementById('feedbackResult');
+                    feedbackResult.innerHTML = `
+                        <strong>Restaurant:</strong> ${feedback.restaurant} <br>
+                        <strong>Rating:</strong> ${feedback.rating} <br>
+                        <strong>Comment:</strong> ${feedback.comment} <br>
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to get feedback');
+                });
+        });
+
+        // Handle updating feedback by ID
+        document.getElementById('updateForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const feedbackId = document.getElementById('updateId').value;
+            const restaurant = document.getElementById('updateRestaurant').value;
+            const rating = document.getElementById('updateRating').value;
+            const comment = document.getElementById('updateComment').value;
+
+            fetch(`/api/feedbacks/${feedbackId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    restaurant: restaurant,
+                    rating: rating,
+                    comment: comment
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                document.getElementById('updateForm').reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update feedback');
+            });
+        });
+
+        // Handle deleting feedback by ID
+        document.getElementById('deleteForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const feedbackId = document.getElementById('deleteId').value;
+
+            fetch(`/api/feedbacks/${feedbackId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                document.getElementById('deleteForm').reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to delete feedback');
+            });
+        });
     </script>
 </body>
 </html>
