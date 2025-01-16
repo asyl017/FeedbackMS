@@ -1,10 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const port = 3000;
 const fmsdb = require('./db');
 const feedbackRoutes = require('./handlers/feedbacks');  // Import feedback routes
-
+const userRoutes = require('./handlers/users');  // Import user routes
 // Middleware to parse JSON data in the body of requests
 app.use(bodyParser.json());
 
@@ -25,10 +26,20 @@ app.get('/submission_page', (req, res) => {
 app.get('/feedback_display', (req, res) => {
     res.sendFile(__dirname + '/user_interface/feedback_display.html');
 });
+// Route for serving the registration page
+app.get('/register', (req, res) => {
+    res.sendFile(__dirname + '/user_interface/register.html');
+});
+
+// Route for serving the login page
+app.get('/login', (req, res) => {
+    res.sendFile(__dirname + '/user_interface/login.html');
+});
 
 // Use feedback routes
 app.use('/', feedbackRoutes);
-
+//Use user routes
+app.use('/', userRoutes);
 
 // Start the server on port 3000
 app.listen(port, () => {
