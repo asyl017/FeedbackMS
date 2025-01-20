@@ -1,12 +1,27 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const fmsdb = require('../db');
+const mongoose = require('mongoose');
+require('dotenv').config();
+
 const router = express.Router();
+
+const dbURI = process.env.MONGODB_URI;
+
+
+mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.error(err));
+
 
 // Secret key for JWT
 const JWT_SECRET = process.env.JWT_SECRET;
-
+// Define User schema and model
+const userSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true }
+});
+const User = mongoose.model('User', userSchema);
 // Endpoint to handle user registration
 router.post('/api/register', async (req, res) => {
     const { username, password } = req.body;
@@ -20,20 +35,19 @@ router.post('/api/register', async (req, res) => {
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert the user into the database
-        const query = 'INSERT INTO users (username, password) VALUES ($1, $2)';
-        const values = [username, hashedPassword];
+        // Create a new user
+        const newUser = new User({ username, password: hashedPassword });
 
-        await fmsdb.query(query, values);
+        // Save the user to the database
+        await newUser.save();
         res.status(200).send('User registered successfully!');
     } catch (err) {
-        console.error('Error registering user:', err);
-        res.status(500).send('Database error');
+        res.status(500).send('Error registering user');
     }
 });
 
 
-// Endpoint to handle user login
+/// Endpoint to handle user login
 router.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -42,28 +56,27 @@ router.post('/api/login', async (req, res) => {
     }
 
     try {
-        const query = 'SELECT * FROM users WHERE username = $1';
-        const values = [username];
-        const result = await fmsdb.query(query, values);
+        // Find the user by username
+        const user = await User.findOne({ username });
 
-        if (result.rows.length === 0) {
+        if (!user) {
             return res.status(400).send('Invalid username or password');
         }
 
-        const user = result.rows[0];
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        // Compare the provided password with the stored hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
 
-        if (!isPasswordValid) {
+        if (!isMatch) {
             return res.status(400).send('Invalid username or password');
         }
 
-        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+        // Generate a JWT token
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
+
         res.status(200).json({ token });
     } catch (err) {
-        console.error('Error logging in user:', err);
-        res.status(500).send('Database error');
+        res.status(500).send('Error logging in');
     }
 });
-
 
 module.exports = router;
