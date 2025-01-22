@@ -5,9 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+    <style>
+     .alert {
+            padding: 20px;
+            background-color: #f44336;
+            color: white;
+            margin-bottom: 15px;
+        } 
+        </style>
 </head>
 <body>
     <h1>Register</h1>
+    <div id="alert" class="alert" style="display: none;"></div>
     <form id="registerForm">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
@@ -19,24 +28,29 @@
     </form>
     <script>
         document.getElementById('registerForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
 
-            const response = await fetch('/api/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            });
-
-            if (response.ok) {
-                alert('User registered successfully!');
-            } else {
-                alert('Error registering user');
-            }
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
         });
+
+        const alertDiv = document.getElementById('alert');
+        if (response.ok) {
+            alertDiv.style.display = 'none';
+            alert('User registered successfully!');
+            window.location.href = '/login.html'; 
+        } else {
+            const result = await response.json();
+            alertDiv.style.display = 'block';
+            alertDiv.innerHTML = result.errors.map(error => error.msg).join('<br>');
+        }
+    });
     </script>
 </body>
 </html>

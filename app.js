@@ -2,8 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const fmsdb = require('./db');
+const users = require('./db');
 const feedbackRoutes = require('./handlers/feedbacks');  // Import feedback routes
 const userRoutes = require('./handlers/users');  // Import user routes
 // Middleware to parse JSON data in the body of requests

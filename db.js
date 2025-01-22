@@ -20,7 +20,7 @@ async function connectToDatabase() {
   try {
     await client.connect();
     console.log("Connected to MongoDB Atlas");
-    const database = client.db('users'); // Replace 'fmsdb' with your database name
+    const database = client.db('users'); 
     return database;
   } catch (error) {
     console.error("Error connecting to MongoDB Atlas", error);
