@@ -41,15 +41,19 @@
         });
 
         const alertDiv = document.getElementById('alert');
-        if (response.ok) {
-            alertDiv.style.display = 'none';
-            alert('User registered successfully!');
-            window.location.href = '/login.html'; 
-        } else {
-            const result = await response.json();
-            alertDiv.style.display = 'block';
-            alertDiv.innerHTML = result.errors.map(error => error.msg).join('<br>');
-        }
+            if (response.ok) {
+                alertDiv.style.display = 'block';
+                alertDiv.style.backgroundColor = 'green';
+                alertDiv.innerHTML = 'User registered successfully!';
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1000); 
+            } else {
+                const result = await response.json();
+                alertDiv.style.display = 'block';
+                alertDiv.style.backgroundColor = '#f44336';
+                alertDiv.innerHTML = result.errors.map(error => error.msg).join('<br>');
+            }
     });
     </script>
 </body>

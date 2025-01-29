@@ -4,11 +4,9 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 require('dotenv').config();
-
+const User = require('../models/user');
 const router = express.Router();
-
 const dbURI = process.env.MONGODB_URI;
-
 
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
@@ -17,12 +15,7 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
 
 // Secret key for JWT
 const JWT_SECRET = process.env.JWT_SECRET;
-// Define User schema and model
-const userSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true }
-});
-const User = mongoose.model('User', userSchema);
+
 
 // Middleware to validate input data
 const validateRegistration = [
@@ -58,7 +51,7 @@ router.post('/api/register', validateRegistration, async (req, res) => {
 
         // Create a new user
         const newUser = new User({ username, password: hashedPassword });
-
+       
         // Save the user to the database
         await newUser.save();
         res.status(200).send('User registered successfully!');

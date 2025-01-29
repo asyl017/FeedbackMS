@@ -4,8 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <style>
+        .alert {
+            padding: 20px;
+            background-color: #f44336;
+            color: white;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
+    <h1>Login</h1>
+    <div id="alert" class="alert" style="display: none;"></div>
     <form id="loginForm">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
@@ -29,15 +39,22 @@
                 body: JSON.stringify({ username, password })
             });
 
+            const alertDiv = document.getElementById('alert');
             if (response.ok) {
                 const data = await response.json();
-                alert('Login successful!');
+                alertDiv.style.display = 'block';
+                alertDiv.style.backgroundColor = 'green';
+                alertDiv.innerHTML = 'Login successful!';
                 // Save the token to localStorage or cookies
                 localStorage.setItem('token', data.token);
-                // Redirect to submission page
-                window.location.href = '/submission_page';
+                // Redirect to submission page after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/submission_page';
+                }, 2000);
             } else {
-                alert('Error logging in');
+                alertDiv.style.display = 'block';
+                alertDiv.style.backgroundColor = '#f44336';
+                alertDiv.innerHTML = 'Error logging in';
             }
         });
     </script>

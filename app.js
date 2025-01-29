@@ -3,19 +3,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 3000;
-const fmsdb = require('./db');
-const users = require('./db');
 const feedbackRoutes = require('./handlers/feedbacks');  // Import feedback routes
 const userRoutes = require('./handlers/users');  // Import user routes
+
 // Middleware to parse JSON data in the body of requests
 app.use(bodyParser.json());
 
-
-// Serve static files (HTML, CSS, JS) from the 'user-interface' directory
+// Serve static files (HTML, CSS, JS) from the 'user_interface' directory
 app.use(express.static('user_interface'));
 
 // Routes for serving HTML pages
-
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/user_interface/restaurant_list.html');
 }); 
@@ -27,6 +24,7 @@ app.get('/submission_page', (req, res) => {
 app.get('/feedback_display', (req, res) => {
     res.sendFile(__dirname + '/user_interface/feedback_display.html');
 });
+
 // Route for serving the registration page
 app.get('/register', (req, res) => {
     res.sendFile(__dirname + '/user_interface/register.html');
@@ -38,9 +36,10 @@ app.get('/login', (req, res) => {
 });
 
 // Use feedback routes
-app.use('/', feedbackRoutes);
-//Use user routes
-app.use('/', userRoutes);
+app.use('/feedback', feedbackRoutes);
+
+// Use user routes
+app.use('/user', userRoutes);
 
 // Start the server on port 3000
 app.listen(port, () => {
