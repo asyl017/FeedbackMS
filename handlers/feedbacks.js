@@ -11,14 +11,14 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .catch(err => console.error('MongoDB connection error:', err));
 
 // Endpoint to get all feedbacks sorted by rating (highest to lowest)
-router.get('/api/feedbacks', (req, res) => {
-    Feedback.find().sort({ rating: -1 }).exec((err, feedbacks) => {
-        if (err) {
-            console.error('Error fetching feedbacks:', err);
-            return res.status(500).send('Database error');
-        }
+router.get('/api/feedbacks', async (req, res) => {
+    try {
+        const feedbacks = await Feedback.find().sort({ rating: -1 }).exec();
         res.json(feedbacks);
-    });
+    } catch (err) {
+        console.error('Error fetching feedbacks:', err);
+        res.status(500).send('Database error');
+    }
 });
 
 // Endpoint to handle submitting feedback
@@ -49,52 +49,52 @@ router.post('/api/submit-feedback', async(req, res) => {
     }
 });
 // Endpoint to get feedback by ID
-router.get('/api/feedbacks/:id', (req, res) => {
+router.get('/api/feedbacks/:id', async (req, res) => {
     const id = req.params.id;
 
-    Feedback.findById(id, (err, feedback) => {
-        if (err) {
-            console.error('Error fetching feedback:', err);
-            return res.status(500).send('Database error');
-        }
+    try {
+        const feedback = await Feedback.findById(id).exec();
         if (!feedback) {
             return res.status(404).send('Feedback not found');
         }
         res.json(feedback);
-    });
+    } catch (err) {
+        console.error('Error fetching feedback:', err);
+        res.status(500).send('Database error');
+    }
 });
 
 // Endpoint to update feedback by ID
-router.put('/api/feedbacks/:id', (req, res) => {
+router.put('/api/feedbacks/:id', async (req, res) => {
     const id = req.params.id;
     const { restaurant, rating, comment } = req.body;
 
-    Feedback.findByIdAndUpdate(id, { restaurant, rating: parseInt(rating), comment }, { new: true }, (err, feedback) => {
-        if (err) {
-            console.error('Error updating feedback:', err);
-            return res.status(500).send('Database error');
-        }
+    try {
+        const feedback = await Feedback.findByIdAndUpdate(id, { restaurant, rating: parseInt(rating), comment }, { new: true }).exec();
         if (!feedback) {
             return res.status(404).send('Feedback not found');
         }
         res.status(200).send('Feedback updated successfully!');
-    });
+    } catch (err) {
+        console.error('Error updating feedback:', err);
+        res.status(500).send('Database error');
+    }
 });
 
 // Endpoint to delete feedback by ID
-router.delete('/api/feedbacks/:id', (req, res) => {
+router.delete('/api/feedbacks/:id', async (req, res) => {
     const id = req.params.id;
 
-    Feedback.findByIdAndDelete(id, (err, feedback) => {
-        if (err) {
-            console.error('Error deleting feedback:', err);
-            return res.status(500).send('Database error');
-        }
+    try {
+        const feedback = await Feedback.findByIdAndDelete(id).exec();
         if (!feedback) {
             return res.status(404).send('Feedback not found');
         }
         res.status(200).send('Feedback deleted successfully!');
-    });
+    } catch (err) {
+        console.error('Error deleting feedback:', err);
+        res.status(500).send('Database error');
+    }
 });
 
 module.exports = router;

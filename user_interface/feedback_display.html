@@ -44,31 +44,41 @@
     </form>
 
     <script>
-        // Fetch the feedbacks from the server and display them
-        fetch('/api/feedbacks')
-            .then(response => response.json())
-            .then(feedbacks => {
-                const feedbackList = document.getElementById('feedbackList');
-                feedbackList.innerHTML = ''; // Clear any existing feedback
+      // Fetch the feedbacks from the server and display them
+    fetch('/feedback/api/feedbacks')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(feedbacks => {
+            const feedbackList = document.getElementById('feedbackList');
+            feedbackList.innerHTML = ''; // Clear any existing feedback
 
-                feedbacks.forEach(feedback => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${feedback.restaurant} - Rating: ${feedback.rating} - ${feedback.comment}`;
-                    feedbackList.appendChild(listItem);
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to load feedbacks');
+            feedbacks.forEach(feedback => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${feedback.restaurant} - Rating: ${feedback.rating} - ${feedback.comment}`;
+                feedbackList.appendChild(listItem);
             });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load feedbacks');
+        });
 
         // Handle getting feedback by ID
         document.getElementById('feedbackForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const feedbackId = document.getElementById('feedbackId').value;
 
-            fetch(`/api/feedbacks/${feedbackId}`)
-                .then(response => response.json())
+            fetch(`feedback/api/feedbacks/${feedbackId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
                 .then(feedback => {
                     const feedbackResult = document.getElementById('feedbackResult');
                     feedbackResult.innerHTML = `
@@ -82,7 +92,6 @@
                     alert('Failed to get feedback');
                 });
         });
-
         // Handle updating feedback by ID
         document.getElementById('updateForm').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -91,18 +100,23 @@
             const rating = document.getElementById('updateRating').value;
             const comment = document.getElementById('updateComment').value;
 
-            fetch(`/api/feedbacks/${feedbackId}`, {
+            fetch(`/feedback/api/feedbacks/${feedbackId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     restaurant: restaurant,
-                    rating: rating,
+                    rating: parseInt(rating),
                     comment: comment
                 })
             })
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.text();
+            })
             .then(data => {
                 alert(data);
                 document.getElementById('updateForm').reset();
@@ -113,15 +127,21 @@
             });
         });
 
-        // Handle deleting feedback by ID
-        document.getElementById('deleteForm').addEventListener('submit', function(event) {
+
+         // Handle deleting feedback by ID
+         document.getElementById('deleteForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const feedbackId = document.getElementById('deleteId').value;
 
-            fetch(`/api/feedbacks/${feedbackId}`, {
+            fetch(`/feedback/api/feedbacks/${feedbackId}`, {
                 method: 'DELETE'
             })
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.text();
+            })
             .then(data => {
                 alert(data);
                 document.getElementById('deleteForm').reset();
