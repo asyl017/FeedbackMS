@@ -12,7 +12,7 @@
     <h2>Get Feedback by ID</h2>
     <form id="feedbackForm">
         <label for="feedbackId">Feedback ID:</label>
-        <input type="number" id="feedbackId" name="feedbackId" required>
+        <input type="text" id="feedbackId" name="feedbackId" required>
         <button type="submit">Get Feedback</button>
     </form>
     <div id="feedbackResult"></div>
@@ -20,7 +20,7 @@
     <h2>Update Feedback by ID</h2>
     <form id="updateForm">
         <label for="updateId">Feedback ID:</label>
-        <input type="number" id="updateId" name="updateId" required>
+        <input type="text" id="updateId" name="updateId" required>
         <label for="updateRestaurant">Restaurant Name:</label>
         <input type="text" id="updateRestaurant" name="updateRestaurant" required>
         <label for="updateRating">Rating (1-5):</label>
@@ -39,7 +39,7 @@
     <h2>Delete Feedback by ID</h2>
     <form id="deleteForm">
         <label for="deleteId">Feedback ID:</label>
-        <input type="number" id="deleteId" name="deleteId" required>
+        <input type="text" id="deleteId" name="deleteId" required>
         <button type="submit">Delete Feedback</button>
     </form>
 
@@ -72,7 +72,7 @@
             event.preventDefault();
             const feedbackId = document.getElementById('feedbackId').value;
 
-            fetch(`feedback/api/feedbacks/${feedbackId}`)
+            fetch(`/api/feedbacks/${feedbackId}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok ' + response.statusText);
@@ -82,6 +82,7 @@
                 .then(feedback => {
                     const feedbackResult = document.getElementById('feedbackResult');
                     feedbackResult.innerHTML = `
+                        <strong>ID:</strong> ${feedback._id} <br>
                         <strong>Restaurant:</strong> ${feedback.restaurant} <br>
                         <strong>Rating:</strong> ${feedback.rating} <br>
                         <strong>Comment:</strong> ${feedback.comment} <br>

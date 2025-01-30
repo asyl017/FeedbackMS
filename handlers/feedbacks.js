@@ -51,26 +51,56 @@ router.post('/api/submit-feedback', async(req, res) => {
 // Endpoint to get feedback by ID
 router.get('/api/feedbacks/:id', async (req, res) => {
     const id = req.params.id;
+    console.log('Searching for feedback with ID:', id); // Добавляем логирование
 
     try {
-        const feedback = await Feedback.findById(id).exec();
+        let feedback;
+        
+        // Пробуем найти по ObjectId
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            feedback = await Feedback.findById(id).exec();
+        }
+        
+        // Если не нашли по ObjectId, пробуем найти по numericId
         if (!feedback) {
+            feedback = await Feedback.findOne({ numericId: parseInt(id) }).exec();
+        }
+
+        if (!feedback) {
+            console.log('Feedback not found for ID:', id); // Добавляем логирование
             return res.status(404).send('Feedback not found');
         }
+
+        console.log('Found feedback:', feedback); // Добавляем логирование
         res.json(feedback);
     } catch (err) {
         console.error('Error fetching feedback:', err);
         res.status(500).send('Database error');
     }
 });
-
 // Endpoint to update feedback by ID
 router.put('/api/feedbacks/:id', async (req, res) => {
     const id = req.params.id;
     const { restaurant, rating, comment } = req.body;
 
     try {
-        const feedback = await Feedback.findByIdAndUpdate(id, { restaurant, rating: parseInt(rating), comment }, { new: true }).exec();
+        let feedback;
+        
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            feedback = await Feedback.findByIdAndUpdate(id, 
+                { restaurant, rating: parseInt(rating), comment }, 
+                { new: true }
+            ).exec();
+        }
+        
+        if (!feedback) {
+            feedback = await Feedback.findOneAndUpdate(
+                { numericId: parseInt(id) },
+                { restaurant, rating: parseInt(rating), comment },
+                { new: true }
+            ).exec();
+        }
+
         if (!feedback) {
             return res.status(404).send('Feedback not found');
         }
@@ -86,7 +116,16 @@ router.delete('/api/feedbacks/:id', async (req, res) => {
     const id = req.params.id;
 
     try {
-        const feedback = await Feedback.findByIdAndDelete(id).exec();
+        let feedback;
+        
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            feedback = await Feedback.findByIdAndDelete(id).exec();
+        }
+        
+        if (!feedback) {
+            feedback = await Feedback.findOneAndDelete({ numericId: parseInt(id) }).exec();
+        }
+
         if (!feedback) {
             return res.status(404).send('Feedback not found');
         }

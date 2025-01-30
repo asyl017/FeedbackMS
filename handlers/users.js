@@ -16,6 +16,23 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
 // Secret key for JWT
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// Auth middleware
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'Access token required' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(403).json({ message: 'Invalid token' });
+    }
+};
 
 // Middleware to validate input data
 const validateRegistration = [
@@ -33,28 +50,35 @@ router.post('/api/register', validateRegistration, async (req, res) => {
 
     const { username, password } = req.body;
 
-    // Validate input: Check if all fields are present
     if (!username || !password) {
         return res.status(400).send('Missing required fields');
     }
 
     try {
-        // Check if the username already exists
         const existingUser = await User.findOne({ username });
         if (existingUser) {
             return res.status(400).json({ errors: [{ msg: 'Username already exists' }] });
         }
 
-
-        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create a new user
         const newUser = new User({ username, password: hashedPassword });
-       
-        // Save the user to the database
         await newUser.save();
-        res.status(200).send('User registered successfully!');
+
+        // Generate token after registration
+        const token = jwt.sign(
+            { id: newUser._id, username: newUser.username },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.status(200).json({
+            message: 'User registered successfully!',
+            token,
+            user: {
+                id: newUser._id,
+                username: newUser.username
+            }
+        });
     } catch (err) {
         console.error(err);
         res.status(500).send(`Error registering user: ${err.message}`);
@@ -65,9 +89,8 @@ router.post('/api/register', validateRegistration, async (req, res) => {
 const validateLogin = [
     body('password').notEmpty().withMessage('Password is required')
 ];
-
-/// Endpoint to handle user login
-router.post('/api/login', async (req, res) => {
+// Login endpoint
+router.post('/api/login', validateLogin, async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -75,28 +98,71 @@ router.post('/api/login', async (req, res) => {
     }
 
     try {
-        // Find the user by username
         const user = await User.findOne({ username });
 
         if (!user) {
             return res.status(400).send('Invalid username or password');
         }
 
-        // Compare the provided password with the stored hashed password
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             return res.status(400).send('Invalid username or password');
         }
 
-        // Generate a JWT token
-        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
+        // Generate access token
+        const token = jwt.sign(
+            { id: user._id, username: user.username },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
 
-        res.status(200).json({ token });
+        // Generate refresh token
+        const refreshToken = jwt.sign(
+            { id: user._id },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        res.status(200).json({
+            token,
+            refreshToken,
+            user: {
+                id: user._id,
+                username: user.username
+            }
+        });
     } catch (err) {
         res.status(500).send('Error logging in');
     }
 });
 
+// Refresh token endpoint
+router.post('/api/refresh-token', async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(401).json({ message: 'Refresh token required' });
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, JWT_SECRET);
+        const user = await User.findById(decoded.id);
+
+        if (!user) {
+            return res.status(403).json({ message: 'User not found' });
+        }
+
+        const newToken = jwt.sign(
+            { id: user._id, username: user.username },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.json({ token: newToken });
+    } catch (err) {
+        res.status(403).json({ message: 'Invalid refresh token' });
+    }
+});
 
 module.exports = router;
