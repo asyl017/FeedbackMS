@@ -1,22 +1,18 @@
-const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
-const { body, validationResult } = require('express-validator');
-require('dotenv').config();
+const { validationResult, body } = require('express-validator');
 const User = require('../models/user');
-const router = express.Router();
+require('dotenv').config();
+const mongoose = require('mongoose');
+
 const dbURI = process.env.MONGODB_URI;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
-    .catch(err => console.error(err));
+    .catch(err => console.error('MongoDB connection error:', err));
 
-
-// Secret key for JWT
-const JWT_SECRET = process.env.JWT_SECRET;
-
-// Auth middleware
+// Middleware to authenticate token
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -34,15 +30,20 @@ const authenticateToken = (req, res, next) => {
     }
 };
 
-// Middleware to validate input data
+// Middleware to validate registration input data
 const validateRegistration = [
     body('password')
         .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
         .matches(/[a-zA-Z]/).withMessage('Password must contain at least one letter')
 ];
 
-// Endpoint to handle user registration
-router.post('/api/register', validateRegistration, async (req, res) => {
+// Middleware to validate login input data
+const validateLogin = [
+    body('password').notEmpty().withMessage('Password is required')
+];
+
+// Handle user registration
+const registerUser = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -83,14 +84,10 @@ router.post('/api/register', validateRegistration, async (req, res) => {
         console.error(err);
         res.status(500).send(`Error registering user: ${err.message}`);
     }
-});
+};
 
-// Middleware to validate login input data
-const validateLogin = [
-    body('password').notEmpty().withMessage('Password is required')
-];
-// Login endpoint
-router.post('/api/login', validateLogin, async (req, res) => {
+// Handle user login
+const loginUser = async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -135,10 +132,10 @@ router.post('/api/login', validateLogin, async (req, res) => {
     } catch (err) {
         res.status(500).send('Error logging in');
     }
-});
+};
 
-// Refresh token endpoint
-router.post('/api/refresh-token', async (req, res) => {
+// Handle refresh token
+const refreshToken = async (req, res) => {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
@@ -163,6 +160,13 @@ router.post('/api/refresh-token', async (req, res) => {
     } catch (err) {
         res.status(403).json({ message: 'Invalid refresh token' });
     }
-});
+};
 
-module.exports = router;
+module.exports = {
+    authenticateToken,
+    validateRegistration,
+    validateLogin,
+    registerUser,
+    loginUser,
+    refreshToken
+};

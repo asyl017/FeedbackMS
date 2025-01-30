@@ -54,7 +54,7 @@
             const comment = document.getElementById('comment').value;
 
             // Sending the feedback data to the backend
-            fetch('/feedback/api/submit-feedback', {
+            fetch('/api/submit-feedback', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

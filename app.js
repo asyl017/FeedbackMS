@@ -3,8 +3,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 3000;
-const feedbackRoutes = require('./handlers/feedbacks');  // Import feedback routes
-const userRoutes = require('./handlers/users');  // Import user routes
+
+const feedbackRoutes = require('./routes/feedbackRoutes');  // Import feedback routes
+const userRoutes = require('./routes/userRoutes');  // Import user routes
 
 // Middleware to parse JSON data in the body of requests
 app.use(bodyParser.json());
@@ -35,11 +36,9 @@ app.get('/login', (req, res) => {
     res.sendFile(__dirname + '/user_interface/login.html');
 });
 
-// Use feedback routes
-app.use('/feedback', feedbackRoutes);
-
-// Use user routes
-app.use('/user', userRoutes);
+// API routes
+app.use('/api', feedbackRoutes);
+app.use('/api', userRoutes);
 
 // Start the server on port 3000
 app.listen(port, () => {
