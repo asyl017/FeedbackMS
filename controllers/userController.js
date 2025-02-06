@@ -49,20 +49,20 @@ const registerUser = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !password) {
+    if (!email || !password) {
         return res.status(400).send('Missing required fields');
     }
 
     try {
-        const existingUser = await User.findOne({ username });
+        const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ errors: [{ msg: 'Username already exists' }] });
+            return res.status(400).json({ errors: [{ msg: 'Email already exists' }] });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, password: hashedPassword });
+        const newUser = new User({ email, password: hashedPassword });
         await newUser.save();
 
         // Generate token after registration
@@ -77,7 +77,7 @@ const registerUser = async (req, res) => {
             token,
             user: {
                 id: newUser._id,
-                username: newUser.username
+                username: newUser.email
             }
         });
     } catch (err) {
@@ -88,28 +88,28 @@ const registerUser = async (req, res) => {
 
 // Handle user login
 const loginUser = async (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !password) {
+    if (!email || !password) {
         return res.status(400).send('Missing required fields');
     }
 
     try {
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).send('Invalid username or password');
+            return res.status(400).send('Invalid email or password');
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(400).send('Invalid username or password');
+            return res.status(400).send('Invalid email or password');
         }
 
         // Generate access token
         const token = jwt.sign(
-            { id: user._id, username: user.username },
+            { id: user._id, email: user.email },
             JWT_SECRET,
             { expiresIn: '1h' }
         );
@@ -126,10 +126,11 @@ const loginUser = async (req, res) => {
             refreshToken,
             user: {
                 id: user._id,
-                username: user.username
+                email: user.email
             }
         });
     } catch (err) {
+        console.error('Error logging in:', err);
         res.status(500).send('Error logging in');
     }
 };
@@ -151,13 +152,14 @@ const refreshToken = async (req, res) => {
         }
 
         const newToken = jwt.sign(
-            { id: user._id, username: user.username },
+            { id: user._id, email: user.email },
             JWT_SECRET,
             { expiresIn: '1h' }
         );
 
         res.json({ token: newToken });
     } catch (err) {
+        console.error('Error refreshing token:', err);
         res.status(403).json({ message: 'Invalid refresh token' });
     }
 };

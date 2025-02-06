@@ -18,8 +18,8 @@
     <h1>Register</h1>
     <div id="alert" class="alert" style="display: none;"></div>
     <form id="registerForm">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
+        <label for="email">Email::</label>
+        <input type="text" id="email" name="email" required>
         <br>
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
@@ -29,7 +29,7 @@
     <script>
         document.getElementById('registerForm').addEventListener('submit', async (event) => {
         event.preventDefault();
-        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
         const response = await fetch('/api/register', {
@@ -37,7 +37,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ email, password })
         });
 
         const alertDiv = document.getElementById('alert');
