@@ -2,15 +2,26 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { validationResult, body } = require('express-validator');
 const User = require('../models/user');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 const mongoose = require('mongoose');
 
 const dbURI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASS
+    }
+});
 
 // Middleware to authenticate token
 const authenticateToken = (req, res, next) => {
@@ -30,17 +41,33 @@ const authenticateToken = (req, res, next) => {
     }
 };
 
-// Middleware to validate registration input data
-const validateRegistration = [
-    body('password')
-        .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-        .matches(/[a-zA-Z]/).withMessage('Password must contain at least one letter')
-];
+// Handle sending OTP
+const sendOtp = async (req, res) => {
+    const { email } = req.body;
 
-// Middleware to validate login input data
-const validateLogin = [
-    body('password').notEmpty().withMessage('Password is required')
-];
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+
+    try {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await transporter.sendMail({
+            from: EMAIL_USER,
+            to: email,
+            subject: 'Your OTP Code',
+            text: `Your OTP code is ${otp}`
+        });
+
+        // Save OTP to session or database
+        req.session.otp = otp;
+        req.session.email = email;
+
+        res.status(200).json({ message: 'OTP sent to email' });
+    } catch (err) {
+        console.error('Error sending OTP:', err);
+        res.status(500).json({ message: 'Error sending OTP' });
+    }
+};
 
 // Handle user registration
 const registerUser = async (req, res) => {
@@ -49,10 +76,15 @@ const registerUser = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { email, password, otp } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).send('Missing required fields');
+    if (!email || !password || !otp) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Check OTP
+    if (!req.session || !req.session.otp || otp !== req.session.otp || email !== req.session.email) {
+        return res.status(400).json({ message: 'Invalid OTP' });
     }
 
     try {
@@ -67,7 +99,7 @@ const registerUser = async (req, res) => {
 
         // Generate token after registration
         const token = jwt.sign(
-            { id: newUser._id, username: newUser.username },
+            { id: newUser._id, email: newUser.email },
             JWT_SECRET,
             { expiresIn: '1h' }
         );
@@ -77,12 +109,12 @@ const registerUser = async (req, res) => {
             token,
             user: {
                 id: newUser._id,
-                username: newUser.email
+                email: newUser.email
             }
         });
     } catch (err) {
         console.error(err);
-        res.status(500).send(`Error registering user: ${err.message}`);
+        res.status(500).json({ message: `Error registering user: ${err.message}` });
     }
 };
 
@@ -91,20 +123,20 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).send('Missing required fields');
+        return res.status(400).json({ message: 'Missing required fields' });
     }
 
     try {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).send('Invalid email or password');
+            return res.status(400).json({ message: 'Invalid email or password' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(400).send('Invalid email or password');
+            return res.status(400).json({ message: 'Invalid email or password' });
         }
 
         // Generate access token
@@ -131,7 +163,7 @@ const loginUser = async (req, res) => {
         });
     } catch (err) {
         console.error('Error logging in:', err);
-        res.status(500).send('Error logging in');
+        res.status(500).json({ message: 'Error logging in' });
     }
 };
 
@@ -166,8 +198,7 @@ const refreshToken = async (req, res) => {
 
 module.exports = {
     authenticateToken,
-    validateRegistration,
-    validateLogin,
+    sendOtp,
     registerUser,
     loginUser,
     refreshToken

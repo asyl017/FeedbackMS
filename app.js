@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
+const session = require('express-session');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -10,11 +11,19 @@ const userRoutes = require('./routes/userRoutes');  // Import user routes
 // Middleware to parse JSON data in the body of requests
 app.use(bodyParser.json());
 
+// Middleware for session handling
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Установите true, если используете HTTPS
+}));
+
 // Serve static files (HTML, CSS, JS) from the 'user_interface' directory
 app.use(express.static('user_interface'));
 
 // Routes for serving HTML pages
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
     res.sendFile(__dirname + '/user_interface/restaurant_list.html');
 }); 
 

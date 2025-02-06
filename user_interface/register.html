@@ -1,60 +1,81 @@
-<!-- filepath: /c:/Users/bolat/OneDrive/Рабочий стол/FeedbackMS-master/user_interface/register.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
-    <style>
-     .alert {
-            padding: 20px;
-            background-color: #f44336;
-            color: white;
-            margin-bottom: 15px;
-        } 
-        </style>
 </head>
 <body>
     <h1>Register</h1>
-    <div id="alert" class="alert" style="display: none;"></div>
     <form id="registerForm">
-        <label for="email">Email::</label>
-        <input type="text" id="email" name="email" required>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
         <br>
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
         <br>
+        <label for="otp">OTP:</label>
+        <input type="text" id="otp" name="otp" required>
+        <br>
+        <button type="button" id="sendOtpButton">Send OTP</button>
         <button type="submit">Register</button>
     </form>
+    <div id="alert" style="display: none;"></div>
     <script>
-        document.getElementById('registerForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+        document.getElementById('sendOtpButton').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
 
-        const response = await fetch('/api/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        });
+            const response = await fetch('/api/send-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
 
-        const alertDiv = document.getElementById('alert');
+            const alertDiv = document.getElementById('alert');
             if (response.ok) {
                 alertDiv.style.display = 'block';
                 alertDiv.style.backgroundColor = 'green';
-                alertDiv.innerHTML = 'User registered successfully!';
-                setTimeout(() => {
-                    window.location.href = '/login';
-                }, 1000); 
+                alertDiv.innerHTML = 'OTP sent to email!';
             } else {
-                const result = await response.json();
                 alertDiv.style.display = 'block';
                 alertDiv.style.backgroundColor = '#f44336';
-                alertDiv.innerHTML = result.errors.map(error => error.msg).join('<br>');
+                alertDiv.innerHTML = 'Error sending OTP';
             }
-    });
+        });
+
+        document.querySelector('form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const email = document.querySelector('#email').value;
+            const password = document.querySelector('#password').value;
+            const otp = document.querySelector('#otp').value;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password, otp })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (data.errors) {
+                        throw new Error(data.errors.map(error => error.msg).join(', '));
+                    } else {
+                        throw new Error(data.message || 'Something went wrong');
+                    }
+                }
+
+                console.log('User registered successfully:', data);
+            } catch (error) {
+                console.error('Error:', error.message);
+            }
+        });
     </script>
 </body>
 </html>

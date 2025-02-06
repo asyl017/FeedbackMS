@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser, refreshToken, validateRegistration, validateLogin } = require('../controllers/userController');
-// Route for user registration
+const { authenticateToken, sendOtp, registerUser, loginUser, refreshToken } = require('../controllers/userController');
+const { validateRegistration, validateLogin } = require('../middlewares/validation');
+
+router.post('/send-otp', sendOtp);
 router.post('/register', validateRegistration, registerUser);
-
-// Route for user login
 router.post('/login', validateLogin, loginUser);
-
-// Route for refreshing token
 router.post('/refresh-token', refreshToken);
 
 module.exports = router;
