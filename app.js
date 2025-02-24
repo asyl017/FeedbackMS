@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 const feedbackRoutes = require('./routes/feedbackRoutes');  // Import feedback routes
 const userRoutes = require('./routes/userRoutes');  // Import user routes
 const Restaurant = require('./models/restaurant');  // Import restaurant model
-
+const { checkAdminRole } = require('./middlewares/roleCheck');  // Import role check middleware
 // Middleware to parse JSON data in the body of requests
 app.use(bodyParser.json());
 
@@ -34,7 +34,7 @@ app.get('/submission_page', (req, res) => {
     res.sendFile(path.join(__dirname, 'user_interface', 'submission_page.html'));
 });
 
-app.get('/feedback_display', (req, res) => {
+app.get('/feedback_display',checkAdminRole, (req, res) => {
     res.sendFile(path.join(__dirname, 'user_interface', 'feedback_display.html'));
 });
 
