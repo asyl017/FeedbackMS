@@ -32,10 +32,10 @@ const restaurantSchema = new mongoose.Schema({
         max: 5,
         default: 0
     },
-    reviews: {
-        type: Array,
-        default: []
-    }
+    reviews: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Feedback'
+    }]
 });
 
 module.exports = mongoose.model('Restaurant', restaurantSchema);

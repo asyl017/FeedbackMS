@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Feedback = require('../models/feedback');
 const Restaurant = require('../models/restaurant');
 
+
 // Handle submitting feedback
 const submitFeedback = async (req, res) => {
     console.log('Received feedback submission request:', req.body);
@@ -48,7 +49,6 @@ const submitFeedback = async (req, res) => {
         res.status(500).send('Database error');
     }
 };
-
 
 // Get all feedbacks sorted by rating (highest to lowest)
 const getAllFeedbacks = async (req, res) => {

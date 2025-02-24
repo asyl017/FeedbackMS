@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const mongoose = require('mongoose');
+const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -26,31 +27,31 @@ app.use(express.static('user_interface'));
 
 // Routes for serving HTML pages
 app.get('/', (_req, res) => {
-    res.sendFile(__dirname + '/user_interface/restaurant_list.html');
+    res.sendFile(path.join(__dirname, 'user_interface', 'restaurant_list.html'));
 }); 
 
 app.get('/submission_page', (req, res) => {
-    res.sendFile(__dirname + '/user_interface/submission_page.html');
+    res.sendFile(path.join(__dirname, 'user_interface', 'submission_page.html'));
 });
 
 app.get('/feedback_display', (req, res) => {
-    res.sendFile(__dirname + '/user_interface/feedback_display.html');
+    res.sendFile(path.join(__dirname, 'user_interface', 'feedback_display.html'));
 });
 
 // Route for serving the registration page
 app.get('/register', (req, res) => {
-    res.sendFile(__dirname + '/user_interface/register.html');
+    res.sendFile(path.join(__dirname, 'user_interface', 'register.html'));
 });
 
 // Route for serving the login page
 app.get('/login', (req, res) => {
-    res.sendFile(__dirname + '/user_interface/login.html');
+    res.sendFile(path.join(__dirname, 'user_interface', 'login.html'));
 });
 
 // Route for serving the profile page
 app.get('/profile', (req, res) => {
     if (req.session.userId) {
-        res.sendFile(__dirname + '/user_interface/profile.html');
+        res.sendFile(path.join(__dirname, 'user_interface', 'profile.html'));
     } else {
         res.redirect('/login');
     }
@@ -58,9 +59,9 @@ app.get('/profile', (req, res) => {
 
 // Route for serving the restaurant details page
 app.get('/restaurant_details', (req, res) => {
-    res.sendFile(__dirname + '/user_interface/restaurant_details.html');
+    res.sendFile(path.join(__dirname, 'user_interface', 'restaurant_details.html'));
 });
-
+    
 // Route for checking authentication status
 app.get('/api/check-auth', (req, res) => {
     if (req.session.userId) {
@@ -85,11 +86,14 @@ app.get('/api/restaurants', async (req, res) => {
     }
 });
 
-// Add a route to get restaurant details by ID
+// Add a route to get restaurant details by ID, including reviews
 app.get('/api/restaurants/:id', async (req, res) => {
     const restaurantId = req.params.id;
     try {
-        const restaurant = await Restaurant.findById(restaurantId).exec();
+        const restaurant = await Restaurant.findById(restaurantId).populate({
+            path: 'reviews',
+            populate: { path: 'user', select: 'username' }
+        }).exec();
         if (!restaurant) {
             return res.status(404).json({ message: 'Restaurant not found' });
         }
@@ -99,7 +103,6 @@ app.get('/api/restaurants/:id', async (req, res) => {
         res.status(500).json({ message: 'Error fetching restaurant details' });
     }
 });
-
 // Start the server on port 3000
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

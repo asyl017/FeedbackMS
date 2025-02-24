@@ -162,7 +162,6 @@
         <div class="menu">
             <a href="/">Home</a>
             <a href="/submission_page">Submit Feedback</a>
-            <a href="/feedback_display">Feedback</a>
             <a href="#" id="profile-link">Profile</a>
         </div>
     </div>
@@ -223,9 +222,8 @@
         }
 
         function viewDetails(restaurantId) {
-            window.location.href = `/restaurant_details?id=${restaurantId}`;
-        }
-
+        window.location.href = `/restaurant_details?id=${restaurantId}`;
+    }
         function leaveFeedback(restaurantId, restaurantName) {
             if (isAuthenticated) {
                 window.location.href = `/submission_page?restaurantId=${restaurantId}&restaurantName=${restaurantName}`;
