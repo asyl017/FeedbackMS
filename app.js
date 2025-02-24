@@ -2,11 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const mongoose = require('mongoose');
 const app = express();
 const port = process.env.PORT || 3000;
 
 const feedbackRoutes = require('./routes/feedbackRoutes');  // Import feedback routes
 const userRoutes = require('./routes/userRoutes');  // Import user routes
+const Restaurant = require('./models/restaurant');  // Import restaurant model
 
 // Middleware to parse JSON data in the body of requests
 app.use(bodyParser.json());
@@ -54,6 +56,11 @@ app.get('/profile', (req, res) => {
     }
 });
 
+// Route for serving the restaurant details page
+app.get('/restaurant_details', (req, res) => {
+    res.sendFile(__dirname + '/user_interface/restaurant_details.html');
+});
+
 // Route for checking authentication status
 app.get('/api/check-auth', (req, res) => {
     if (req.session.userId) {
@@ -66,6 +73,32 @@ app.get('/api/check-auth', (req, res) => {
 // API routes
 app.use('/api', feedbackRoutes);
 app.use('/api', userRoutes);
+
+// Add a route to get all restaurants
+app.get('/api/restaurants', async (req, res) => {
+    try {
+        const restaurants = await Restaurant.find().exec();
+        res.json(restaurants);
+    } catch (err) {
+        console.error('Error fetching restaurants:', err);
+        res.status(500).json({ message: 'Error fetching restaurants' });
+    }
+});
+
+// Add a route to get restaurant details by ID
+app.get('/api/restaurants/:id', async (req, res) => {
+    const restaurantId = req.params.id;
+    try {
+        const restaurant = await Restaurant.findById(restaurantId).exec();
+        if (!restaurant) {
+            return res.status(404).json({ message: 'Restaurant not found' });
+        }
+        res.json(restaurant);
+    } catch (err) {
+        console.error('Error fetching restaurant details:', err);
+        res.status(500).json({ message: 'Error fetching restaurant details' });
+    }
+});
 
 // Start the server on port 3000
 app.listen(port, () => {
