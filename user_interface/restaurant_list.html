@@ -173,7 +173,21 @@
             <select id="type">
                 <option value="">All</option>
                 <option value="Italian">Italian</option>
-                <option value="Turkish">Turkish</option>
+                <option value="Japanese">Japanese</option>
+                <option value="French">French</option>
+                <option value="American">American</option>
+                <option value="Mexican">Mexican</option>
+                <option value="Vegan">Vegan</option>
+            </select>
+
+            <label for="rating">Minimum Rating:</label>
+            <select id="rating">
+                <option value="0">All</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
             </select>
 
             <button onclick="filterRestaurants()">Filter</button>
@@ -199,8 +213,9 @@
 
         function filterRestaurants() {
             const type = document.getElementById('type').value;
+            const rating = document.getElementById('rating').value;
 
-            fetch(`/api/restaurants?type=${type}`)
+            fetch(`/api/restaurants?type=${type}&minRating=${rating}`)
                 .then(response => response.json())
                 .then(data => {
                     const restaurantList = document.getElementById('restaurant-list');
@@ -222,8 +237,9 @@
         }
 
         function viewDetails(restaurantId) {
-        window.location.href = `/restaurant_details?id=${restaurantId}`;
-    }
+            window.location.href = `/restaurant_details?id=${restaurantId}`;
+        }
+
         function leaveFeedback(restaurantId, restaurantName) {
             if (isAuthenticated) {
                 window.location.href = `/submission_page?restaurantId=${restaurantId}&restaurantName=${restaurantName}`;

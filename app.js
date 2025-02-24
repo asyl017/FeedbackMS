@@ -75,10 +75,21 @@ app.get('/api/check-auth', (req, res) => {
 app.use('/api', feedbackRoutes);
 app.use('/api', userRoutes);
 
-// Add a route to get all restaurants
+// Add a route to get all restaurants with filtering
 app.get('/api/restaurants', async (req, res) => {
+    const { type, minRating } = req.query;
+    const filter = {};
+
+    if (type) {
+        filter.cuisine = type;
+    }
+
+    if (minRating) {
+        filter.rating = { $gte: parseInt(minRating) };
+    }
+
     try {
-        const restaurants = await Restaurant.find().exec();
+        const restaurants = await Restaurant.find(filter).exec();
         res.json(restaurants);
     } catch (err) {
         console.error('Error fetching restaurants:', err);
