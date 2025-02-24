@@ -5,6 +5,7 @@ const Feedback = require('../models/feedback');
 const submitFeedback = async (req, res) => {
     console.log('Received feedback submission request:', req.body);
     const { restaurant, rating, comment } = req.body;
+    const userId = req.session.userId; // Получаем идентификатор пользователя из сессии
 
     // Validate input: Check if all fields are present
     if (!restaurant || !rating || !comment) {
@@ -16,7 +17,8 @@ const submitFeedback = async (req, res) => {
     const newFeedback = new Feedback({
         restaurant,
         rating: parseInt(rating),
-        comment
+        comment,
+        user: userId // Сохраняем идентификатор пользователя
     });
 
     try {
