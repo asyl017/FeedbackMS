@@ -90,6 +90,7 @@ const registerUser = async (req, res) => {
         user.password = hashedPassword;
         user.verified = true;
         user.otp = undefined; // Clear OTP after verification
+        user.role = 'user'; // Присваиваем роль 'user'
         await user.save();
 
         res.status(200).json({
@@ -97,7 +98,8 @@ const registerUser = async (req, res) => {
             user: {
                 id: user._id,
                 username: user.username, // Возвращаем username
-                email: user.email
+                email: user.email,
+                role: user.role // Возвращаем роль
             }
         });
     } catch (err) {
@@ -135,7 +137,8 @@ const loginUser = async (req, res) => {
             user: {
                 id: user._id,
                 username: user.username, // Возвращаем username
-                email: user.email
+                email: user.email,
+                role: user.role // Возвращаем роль
             }
         });
     } catch (err) {

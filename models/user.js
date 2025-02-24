@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     otp: { type: String },
     verified: { type: Boolean, default: false },
-    token: { type: String } // Store refresh token
+    token: { type: String }, // Store refresh token
+    role: { type: String, default: 'user' } // Добавляем поле role с дефолтным значением 'user'
 });
 
 const User = mongoose.model('User', userSchema);
