@@ -4,8 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feedback List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .navbar .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        .navbar .logo img {
+            height: 40px;
+            margin-right: 10px;
+        }
+        .navbar .menu {
+            display: flex;
+            gap: 20px;
+            align-items: center; /* Ensure all menu items are aligned */
+        }
+        .navbar a {
+            color: #333;
+            text-decoration: none;
+            padding: 10px 0;
+            position: relative;
+        }
+        .navbar a::after {
+            content: '';
+            display: block;
+            width: 0;
+            height: 2px;
+            background: #333;
+            transition: width 0.3s;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+        .navbar a:hover::after {
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="/images/4b4312e790d670466ae47ba22be26e01.png" alt="Logo"> Restback
+        </div>
+        <div class="menu">
+            <a href="/">Home</a>
+            <a href="/submission_page">Submit Feedback</a>
+            <a href="#" id="profile-link">Profile</a>
+        </div>
+    </div>
+
     <h1>Feedbacks</h1>
     <ul id="feedbackList"></ul>
 
@@ -44,35 +108,35 @@
     </form>
 
     <script>
-      // Fetch the feedbacks from the server and display them
-    fetch('/api/feedbacks')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok ' + response.statusText);
-            }
-            return response.json();
-        })
-        .then(feedbacks => {
-            const feedbackList = document.getElementById('feedbackList');
-            feedbackList.innerHTML = ''; // Clear any existing feedback
+        // Fetch the feedbacks from the server and display them
+        fetch('/api/feedbacks')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(feedbacks => {
+                const feedbackList = document.getElementById('feedbackList');
+                feedbackList.innerHTML = ''; // Clear any existing feedback
 
-            feedbacks.forEach(feedback => {
-                const listItem = document.createElement('li');
-                listItem.textContent = `${feedback.restaurant} - Rating: ${feedback.rating} - ${feedback.comment}`;
-                feedbackList.appendChild(listItem);
+                feedbacks.forEach(feedback => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${feedback.restaurant} - Rating: ${feedback.rating} - ${feedback.comment}`;
+                    feedbackList.appendChild(listItem);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to load feedbacks');
             });
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to load feedbacks');
-        });
 
         // Handle getting feedback by ID
         document.getElementById('feedbackForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const feedbackId = document.getElementById('feedbackId').value;
 
-            fetch(`/api/feedbacks/`)
+            fetch(`/api/feedbacks/${feedbackId}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok ' + response.statusText);
@@ -93,6 +157,7 @@
                     alert('Failed to get feedback');
                 });
         });
+
         // Handle updating feedback by ID
         document.getElementById('updateForm').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -101,7 +166,7 @@
             const rating = document.getElementById('updateRating').value;
             const comment = document.getElementById('updateComment').value;
 
-            fetch(`/feedback/api/feedbacks/${feedbackId}`, {
+            fetch(`/api/feedbacks/${feedbackId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -128,13 +193,12 @@
             });
         });
 
-
-         // Handle deleting feedback by ID
-         document.getElementById('deleteForm').addEventListener('submit', function(event) {
+        // Handle deleting feedback by ID
+        document.getElementById('deleteForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const feedbackId = document.getElementById('deleteId').value;
 
-            fetch(`/feedback/api/feedbacks/${feedbackId}`, {
+            fetch(`/api/feedbacks/${feedbackId}`, {
                 method: 'DELETE'
             })
             .then(response => {
@@ -152,6 +216,30 @@
                 alert('Failed to delete feedback');
             });
         });
+
+        function checkAuth() {
+            fetch('/api/check-auth', {
+                method: 'GET',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const profileLink = document.getElementById('profile-link');
+                if (data.isAuthenticated) {
+                    profileLink.innerHTML = 'Profile';
+                    profileLink.onclick = redirectToProfile;
+                } else {
+                    profileLink.innerHTML = 'Profile';
+                    profileLink.onclick = () => window.location.href = '/login';
+                }
+            });
+        }
+
+        function redirectToProfile() {
+            window.location.href = '/profile';
+        }
+
+        checkAuth();
     </script>
 </body>
 </html>

@@ -13,12 +13,61 @@
             height: 100vh;
             background-color: #f0f0f0;
         }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        .navbar .logo img {
+            height: 40px;
+            margin-right: 10px;
+        }
+        .navbar .menu {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .navbar a {
+            color: #333;
+            text-decoration: none;
+            padding: 10px 0;
+            position: relative;
+        }
+        .navbar a::after {
+            content: '';
+            display: block;
+            width: 0;
+            height: 2px;
+            background: #333;
+            transition: width 0.3s;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+        .navbar a:hover::after {
+            width: 100%;
+        }
         .container {
             background-color: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+            margin-top: 60px; /* Adjust for fixed navbar */
         }
         .alert {
             padding: 20px;
@@ -75,7 +124,7 @@
             top: 10%;
             transform: translate(-50%, -10%);
             width: 300px; /* Fixed width */
-            background-color: #00f048; /* Red background */
+            background-color: #139339; /* Red background */
             color: white;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -102,6 +151,17 @@
     </style>
 </head>
 <body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="/images/4b4312e790d670466ae47ba22be26e01.png" alt="Logo"> Restback
+        </div>
+        <div class="menu">
+            <a href="/">Home</a>
+            <a href="/submission_page">Submit Feedback</a>
+            <a href="#" id="profile-link">Profile</a>
+        </div>
+    </div>
+
     <div class="container">
         <h1>Profile</h1>
         <div id="profile-info">
@@ -210,6 +270,29 @@
             modal.style.display = "block";
         }
 
+        function checkAuth() {
+            fetch('/api/check-auth', {
+                method: 'GET',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const profileLink = document.getElementById('profile-link');
+                if (data.isAuthenticated) {
+                    profileLink.innerHTML = 'Profile';
+                    profileLink.onclick = redirectToProfile;
+                } else {
+                    profileLink.innerHTML = 'Profile';
+                    profileLink.onclick = () => window.location.href = '/login';
+                }
+            });
+        }
+
+        function redirectToProfile() {
+            window.location.href = '/profile';
+        }
+
+        checkAuth();
         fetchProfile();
         fetchUserFeedbacks();
     </script>
