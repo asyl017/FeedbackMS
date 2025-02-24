@@ -4,23 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .alert {
+            padding: 20px;
+            background-color: #f44336;
+            color: white;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-    <h1>Register</h1>
-    <form id="registerForm">
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required>
-        <br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
-        <label for="otp">OTP:</label>
-        <input type="text" id="otp" name="otp" required>
-        <br>
-        <button type="button" id="sendOtpButton">Send OTP</button>
-        <button type="submit">Register</button>
-    </form>
-    <div id="alert" style="display: none;"></div>
+    <div class="container">
+        <h1>Register</h1>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="button" id="sendOtpButton">Send OTP</button>
+        </form>
+        <div id="otp-section" style="display: none;">
+            <h3>Enter OTP</h3>
+            <form id="otpForm">
+                <div class="form-group">
+                    <label for="otp-email">Email:</label>
+                    <input type="email" id="otp-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="otp">OTP:</label>
+                    <input type="text" id="otp" name="otp" required>
+                </div>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+        <div id="alert" class="alert"></div>
+    </div>
     <script>
         document.getElementById('sendOtpButton').addEventListener('click', async () => {
             const email = document.getElementById('email').value;
@@ -38,6 +103,7 @@
                 alertDiv.style.display = 'block';
                 alertDiv.style.backgroundColor = 'green';
                 alertDiv.innerHTML = 'OTP sent to email!';
+                document.getElementById('otp-section').style.display = 'block';
             } else {
                 alertDiv.style.display = 'block';
                 alertDiv.style.backgroundColor = '#f44336';
@@ -45,35 +111,34 @@
             }
         });
 
-        document.querySelector('form').addEventListener('submit', async (event) => {
+        document.getElementById('otpForm').addEventListener('submit', async (event) => {
             event.preventDefault();
 
-            const email = document.querySelector('#email').value;
-            const password = document.querySelector('#password').value;
-            const otp = document.querySelector('#otp').value;
+            const username = document.getElementById('username').value; // Получаем username
+            const email = document.getElementById('otp-email').value;
+            const password = document.getElementById('password').value;
+            const otp = document.getElementById('otp').value;
 
-            try {
-                const response = await fetch('http://localhost:3000/api/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password, otp })
-                });
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, email, password, otp }) // Отправляем username
+            });
 
-                const data = await response.json();
-
-                if (!response.ok) {
-                    if (data.errors) {
-                        throw new Error(data.errors.map(error => error.msg).join(', '));
-                    } else {
-                        throw new Error(data.message || 'Something went wrong');
-                    }
-                }
-
-                console.log('User registered successfully:', data);
-            } catch (error) {
-                console.error('Error:', error.message);
+            const alertDiv = document.getElementById('alert');
+            if (response.ok) {
+                alertDiv.style.display = 'block';
+                alertDiv.style.backgroundColor = 'green';
+                alertDiv.innerHTML = 'Registration successful!';
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            } else {
+                alertDiv.style.display = 'block';
+                alertDiv.style.backgroundColor = '#f44336';
+                alertDiv.innerHTML = 'Error registering';
             }
         });
     </script>

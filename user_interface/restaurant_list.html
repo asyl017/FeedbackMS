@@ -4,28 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            background-color: #333;
+            padding: 10px;
+        }
+        .navbar a {
+            color: white;
+            padding: 14px 20px;
+            text-decoration: none;
+            text-align: center;
+        }
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .container {
+            padding: 20px;
+        }
+        .alert {
+            padding: 20px;
+            background-color: #f44336;
+            color: white;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Search and Filter Restaurants</h1>
-
-    <div>
-        <label for="type">Restaurant Type:</label>
-        <select id="type">
-            <option value="">All</option>
-            <option value="Italian">Italian</option>
-            <option value="Turkish">Turkish</option>
-        </select>
-
-        <label for="price">Average Bill:</label>
-        <input type="range" id="price" min="0" max="100" step="10" />
-        <span id="price-value">0</span>
-
-        <button onclick="filterRestaurants()">Filter</button>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <div id="profile-section">
+            <!-- Profile or Login/Register will be dynamically inserted here -->
+        </div>
     </div>
 
-    <h2>Restaurant List</h2>
-    <div id="restaurant-list">
-        <!-- Restaurant items will be populated dynamically here -->
+    <div class="container">
+        <h1>Search and Filter Restaurants</h1>
+
+        <div>
+            <label for="type">Restaurant Type:</label>
+            <select id="type">
+                <option value="">All</option>
+                <option value="Italian">Italian</option>
+                <option value="Turkish">Turkish</option>
+            </select>
+
+            <label for="price">Average Bill:</label>
+            <input type="range" id="price" min="0" max="100" step="10" />
+            <span id="price-value">0</span>
+
+            <button onclick="filterRestaurants()">Filter</button>
+        </div>
+
+        <h2>Restaurant List</h2>
+        <div id="restaurant-list">
+            <!-- Restaurant items will be populated dynamically here -->
+        </div>
     </div>
 
     <script>
@@ -53,6 +92,42 @@
                     });
                 });
         }
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('profile-section').innerHTML = `
+                    <a href="#" onclick="redirectToProfile()">Profile</a>
+                `;
+            } else {
+                document.getElementById('profile-section').innerHTML = `
+                    <a href="/login">Login</a>
+                `;
+            }
+        }
+
+        function redirectToProfile() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                fetch('/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/profile';
+                    } else {
+                        alert('Error accessing profile');
+                    }
+                });
+            } else {
+                window.location.href = '/login';
+            }
+        }
+
+        checkAuth();
     </script>
 </body>
 </html>

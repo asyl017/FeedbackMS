@@ -45,6 +45,15 @@ app.get('/login', (req, res) => {
     res.sendFile(__dirname + '/user_interface/login.html');
 });
 
+// Route for serving the profile page
+app.get('/profile', (req, res) => {
+    if (req.session.userId) {
+        res.sendFile(__dirname + '/user_interface/profile.html');
+    } else {
+        res.redirect('/login');
+    }
+});
+
 // API routes
 app.use('/api', feedbackRoutes);
 app.use('/api', userRoutes);

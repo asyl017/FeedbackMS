@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .alert {
+            padding: 20px;
+            background-color: #f44336;
+            color: white;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Profile</h1>
+        <div id="profile-info">
+            <!-- Profile information will be dynamically inserted here -->
+        </div>
+        <button id="logoutButton">Log out</button>
+    </div>
+    <script>
+        async function fetchProfile() {
+            const response = await fetch('/api/profile');
+
+            if (response.ok) {
+                const profile = await response.json();
+                document.getElementById('profile-info').innerHTML = `
+                    <p><strong>Username:</strong> ${profile.username}</p>
+                    <p><strong>Email:</strong> ${profile.email}</p>
+                `;
+            } else {
+                alert('Error fetching profile information');
+            }
+        }
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            fetch('/api/logout', {
+                method: 'POST'
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = '/login'; // Перенаправляем на страницу логина после выхода
+                } else {
+                    alert('Error logging out');
+                }
+            });
+        });
+
+        fetchProfile();
+    </script>
+</body>
+</html>

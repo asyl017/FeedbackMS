@@ -1,5 +1,4 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const User = require('../models/user');
 const nodemailer = require('nodemailer');
@@ -7,7 +6,6 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const dbURI = process.env.MONGODB_URI;
-const JWT_SECRET = process.env.JWT_SECRET;
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 
@@ -22,24 +20,6 @@ const transporter = nodemailer.createTransport({
         pass: EMAIL_PASS
     }
 });
-
-// Middleware to authenticate token
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({ message: 'Access token required' });
-    }
-
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (err) {
-        return res.status(403).json({ message: 'Invalid token' });
-    }
-};
 
 // Handle sending OTP
 const sendOtp = async (req, res) => {
@@ -75,9 +55,9 @@ const registerUser = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, otp } = req.body;
+    const { username, email, password, otp } = req.body;
 
-    if (!email || !password || !otp) {
+    if (!username || !email || !password || !otp) {
         return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -94,23 +74,17 @@ const registerUser = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        user.username = username; // Сохраняем username
         user.password = hashedPassword;
         user.verified = true;
         user.otp = undefined; // Clear OTP after verification
         await user.save();
 
-        // Generate token after registration
-        const token = jwt.sign(
-            { id: user._id, email: user.email },
-            JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
         res.status(200).json({
             message: 'User registered successfully!',
-            token,
             user: {
                 id: user._id,
+                username: user.username, // Возвращаем username
                 email: user.email
             }
         });
@@ -141,25 +115,14 @@ const loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
-        // Generate access token
-        const token = jwt.sign(
-            { id: user._id, email: user.email },
-            JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        // Generate refresh token
-        const refreshToken = jwt.sign(
-            { id: user._id },
-            JWT_SECRET,
-            { expiresIn: '7d' }
-        );
+        // Save user ID in session
+        req.session.userId = user._id;
 
         res.status(200).json({
-            token,
-            refreshToken,
+            message: 'Login successful!',
             user: {
                 id: user._id,
+                username: user.username, // Возвращаем username
                 email: user.email
             }
         });
@@ -169,39 +132,39 @@ const loginUser = async (req, res) => {
     }
 };
 
-// Handle refresh token
-const refreshToken = async (req, res) => {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-        return res.status(401).json({ message: 'Refresh token required' });
-    }
+// Handle fetching profile information
+const getProfile = async (req, res) => {
+    const userId = req.session.userId;
 
     try {
-        const decoded = jwt.verify(refreshToken, JWT_SECRET);
-        const user = await User.findById(decoded.id);
-
+        const user = await User.findById(userId).select('-password -otp');
         if (!user) {
-            return res.status(403).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        const newToken = jwt.sign(
-            { id: user._id, email: user.email },
-            JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        res.json({ token: newToken });
+        res.json(user);
     } catch (err) {
-        console.error('Error refreshing token:', err);
-        res.status(403).json({ message: 'Invalid refresh token' });
+        console.error('Error fetching profile:', err);
+        res.status(500).json({ message: 'Error fetching profile' });
     }
 };
 
+// Handle user logout
+const logoutUser = (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Error logging out:', err);
+            return res.status(500).json({ message: 'Error logging out' });
+        }
+        res.clearCookie('connect.sid'); // Очистить cookie сессии
+        res.status(200).json({ message: 'Logout successful' });
+    });
+};
+
 module.exports = {
-    authenticateToken,
     sendOtp,
     registerUser,
     loginUser,
-    refreshToken
+    getProfile,
+    logoutUser // Экспортируем функцию logoutUser
 };
