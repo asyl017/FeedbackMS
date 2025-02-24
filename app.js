@@ -54,6 +54,15 @@ app.get('/profile', (req, res) => {
     }
 });
 
+// Route for checking authentication status
+app.get('/api/check-auth', (req, res) => {
+    if (req.session.userId) {
+        res.json({ isAuthenticated: true });
+    } else {
+        res.json({ isAuthenticated: false });
+    }
+});
+
 // API routes
 app.use('/api', feedbackRoutes);
 app.use('/api', userRoutes);
