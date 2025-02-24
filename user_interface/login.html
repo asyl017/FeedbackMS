@@ -92,9 +92,10 @@
                     window.location.href = '/profile';
                 }, 2000);
             } else {
+                const data = await response.json();
                 alertDiv.style.display = 'block';
                 alertDiv.style.backgroundColor = '#f44336';
-                alertDiv.innerHTML = 'Error logging in';
+                alertDiv.innerHTML = data.message || 'Error logging in';
             }
         });
     </script>

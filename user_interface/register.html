@@ -105,9 +105,10 @@
                 alertDiv.innerHTML = 'OTP sent to email!';
                 document.getElementById('otp-section').style.display = 'block';
             } else {
+                const data = await response.json();
                 alertDiv.style.display = 'block';
                 alertDiv.style.backgroundColor = '#f44336';
-                alertDiv.innerHTML = 'Error sending OTP';
+                alertDiv.innerHTML = data.message || 'Error sending OTP';
             }
         });
 
@@ -136,9 +137,10 @@
                     window.location.href = '/login';
                 }, 2000);
             } else {
+                const data = await response.json();
                 alertDiv.style.display = 'block';
                 alertDiv.style.backgroundColor = '#f44336';
-                alertDiv.innerHTML = 'Error registering';
+                alertDiv.innerHTML = data.message || 'Error registering';
             }
         });
     </script>

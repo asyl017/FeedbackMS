@@ -30,6 +30,12 @@ const sendOtp = async (req, res) => {
     }
 
     try {
+        const existingUser = await User.findOne({ email });
+
+        if (existingUser && existingUser.verified) {
+            return res.status(400).json({ message: 'Email is already registered' });
+        }
+
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         await transporter.sendMail({
             from: EMAIL_USER,
@@ -62,6 +68,12 @@ const registerUser = async (req, res) => {
     }
 
     try {
+        const existingUser = await User.findOne({ email });
+
+        if (existingUser && existingUser.verified) {
+            return res.status(400).json({ message: 'Email is already registered' });
+        }
+
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -106,7 +118,7 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).json({ message: 'Invalid email or password' });
+            return res.status(400).json({ message: 'Account not registered' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -166,5 +178,5 @@ module.exports = {
     registerUser,
     loginUser,
     getProfile,
-    logoutUser // Экспортируем функцию logoutUser
+    logoutUser 
 };
