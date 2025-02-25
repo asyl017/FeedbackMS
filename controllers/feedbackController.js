@@ -50,17 +50,15 @@ const submitFeedback = async (req, res) => {
     }
 };
 
-// Get all feedbacks sorted by rating (highest to lowest)
 const getAllFeedbacks = async (req, res) => {
     try {
-        const feedbacks = await Feedback.find().sort({ rating: -1 }).exec();
+        const feedbacks = await Feedback.find().populate('user', 'username email').sort({ rating: -1 }).exec();
         res.json(feedbacks);
     } catch (err) {
         console.error('Error fetching feedbacks:', err);
         res.status(500).send('Database error');
     }
 };
-
 // Get feedback by ID
 const getFeedbackById = async (req, res) => {
     const id = req.params.id;

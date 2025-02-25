@@ -34,7 +34,7 @@
         .navbar .menu {
             display: flex;
             gap: 20px;
-            align-items: center; /* Ensure all menu items are aligned */
+            align-items: center;
         }
         .navbar a {
             color: #333;
@@ -56,6 +56,33 @@
         .navbar a:hover::after {
             width: 100%;
         }
+        .container {
+            padding: 20px;
+        }
+        .user-list, .feedback-list {
+            margin-bottom: 20px;
+        }
+        .user-item, .feedback-item {
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-item button, .feedback-item button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .user-item button:hover, .feedback-item button:hover {
+            background-color: #d32f2f;
+        }
     </style>
 </head>
 <body>
@@ -70,152 +97,82 @@
         </div>
     </div>
 
-    <h1>Feedbacks</h1>
-    <ul id="feedbackList"></ul>
+    <div class="container">
+        <h1>Users</h1>
+        <div id="userList" class="user-list"></div>
 
-    <h2>Get Feedback by ID</h2>
-    <form id="feedbackForm">
-        <label for="feedbackId">Feedback ID:</label>
-        <input type="text" id="feedbackId" name="feedbackId" required>
-        <button type="submit">Get Feedback</button>
-    </form>
-    <div id="feedbackResult"></div>
-
-    <h2>Update Feedback by ID</h2>
-    <form id="updateForm">
-        <label for="updateId">Feedback ID:</label>
-        <input type="text" id="updateId" name="updateId" required>
-        <label for="updateRestaurant">Restaurant Name:</label>
-        <input type="text" id="updateRestaurant" name="updateRestaurant" required>
-        <label for="updateRating">Rating (1-5):</label>
-        <select id="updateRating" name="updateRating" required>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-        </select>
-        <label for="updateComment">Comment:</label>
-        <textarea id="updateComment" name="updateComment" required></textarea>
-        <button type="submit">Update Feedback</button>
-    </form>
-
-    <h2>Delete Feedback by ID</h2>
-    <form id="deleteForm">
-        <label for="deleteId">Feedback ID:</label>
-        <input type="text" id="deleteId" name="deleteId" required>
-        <button type="submit">Delete Feedback</button>
-    </form>
+        <h1>Feedbacks</h1>
+        <div id="feedbackList" class="feedback-list"></div>
+    </div>
 
     <script>
-        // Fetch the feedbacks from the server and display them
-        fetch('/api/feedbacks')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                return response.json();
+        // Fetch and display users
+        fetch('/api/users')
+            .then(response => response.json())
+            .then(users => {
+                const userList = document.getElementById('userList');
+                userList.innerHTML = '';
+                users.forEach(user => {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'user-item';
+                    userItem.innerHTML = `
+                        <span>${user.username} (${user.email})</span>
+                        <button onclick="deleteUser('${user._id}')">Delete User</button>
+                    `;
+                    userList.appendChild(userItem);
+                });
             })
+            .catch(error => console.error('Error fetching users:', error));
+
+        // Fetch and display feedbacks
+        fetch('/api/feedbacks')
+            .then(response => response.json())
             .then(feedbacks => {
                 const feedbackList = document.getElementById('feedbackList');
-                feedbackList.innerHTML = ''; // Clear any existing feedback
-
+                feedbackList.innerHTML = '';
                 feedbacks.forEach(feedback => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${feedback.restaurant} - Rating: ${feedback.rating} - ${feedback.comment}`;
-                    feedbackList.appendChild(listItem);
+                    const feedbackItem = document.createElement('div');
+                    feedbackItem.className = 'feedback-item';
+                    feedbackItem.innerHTML = `
+                        <span>ID: ${feedback._id} - Rating: ${feedback.rating} - ${feedback.comment}</span>
+                        <button onclick="deleteFeedback('${feedback._id}')">Delete Feedback</button>
+                    `;
+                    feedbackList.appendChild(feedbackItem);
                 });
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to load feedbacks');
-            });
+            .catch(error => console.error('Error fetching feedbacks:', error));
 
-        // Handle getting feedback by ID
-        document.getElementById('feedbackForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const feedbackId = document.getElementById('feedbackId').value;
-
-            fetch(`/api/feedbacks/${feedbackId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok ' + response.statusText);
-                    }
-                    return response.json();
-                })
-                .then(feedback => {
-                    const feedbackResult = document.getElementById('feedbackResult');
-                    feedbackResult.innerHTML = `
-                        <strong>ID:</strong> ${feedback._id} <br>
-                        <strong>Restaurant:</strong> ${feedback.restaurant} <br>
-                        <strong>Rating:</strong> ${feedback.rating} <br>
-                        <strong>Comment:</strong> ${feedback.comment} <br>
-                    `;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to get feedback');
-                });
-        });
-
-        // Handle updating feedback by ID
-        document.getElementById('updateForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const feedbackId = document.getElementById('updateId').value;
-            const restaurant = document.getElementById('updateRestaurant').value;
-            const rating = document.getElementById('updateRating').value;
-            const comment = document.getElementById('updateComment').value;
-
-            fetch(`/api/feedbacks/${feedbackId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    restaurant: restaurant,
-                    rating: parseInt(rating),
-                    comment: comment
-                })
+        // Delete user function
+        function deleteUser(userId) {
+            fetch(`/api/users/${userId}`, {
+                method: 'DELETE'
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
+                if (response.ok) {
+                    alert('User deleted successfully');
+                    location.reload();
+                } else {
+                    alert('Failed to delete user');
                 }
-                return response.text();
             })
-            .then(data => {
-                alert(data);
-                document.getElementById('updateForm').reset();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to update feedback');
-            });
-        });
+            .catch(error => console.error('Error deleting user:', error));
+        }
 
-        // Handle deleting feedback by ID
-        document.getElementById('deleteForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const feedbackId = document.getElementById('deleteId').value;
-
+        // Delete feedback function
+        function deleteFeedback(feedbackId) {
             fetch(`/api/feedbacks/${feedbackId}`, {
                 method: 'DELETE'
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
+                if (response.ok) {
+                    alert('Feedback deleted successfully');
+                    location.reload();
+                } else {
+                    alert('Failed to delete feedback');
                 }
-                return response.text();
             })
-            .then(data => {
-                alert(data);
-                document.getElementById('deleteForm').reset();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to delete feedback');
-            });
-        });
+            .catch(error => console.error('Error deleting feedback:', error));
+        }
 
         function checkAuth() {
             fetch('/api/check-auth', {

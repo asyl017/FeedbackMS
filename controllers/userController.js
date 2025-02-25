@@ -175,11 +175,49 @@ const logoutUser = (req, res) => {
         res.status(200).json({ message: 'Logout successful' });
     });
 };
+// Handle fetching all users
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find().select('-password -otp');
+        res.json(users);
+    } catch (err) {
+        console.error('Error fetching users:', err);
+        res.status(500).json({ message: 'Error fetching users' });
+    }
+};
+
+// Handle deleting a user by ID
+const deleteUserById = async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        const user = await User.findByIdAndDelete(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting user:', err);
+        res.status(500).json({ message: 'Error deleting user' });
+    }
+};
 
 module.exports = {
     sendOtp,
     registerUser,
     loginUser,
     getProfile,
-    logoutUser 
+    logoutUser,
+    getAllUsers,
+    deleteUserById
+};
+
+module.exports = {
+    sendOtp,
+    registerUser,
+    loginUser,
+    getProfile,
+    logoutUser,
+    getAllUsers,
+    deleteUserById
 };
